@@ -5,6 +5,7 @@ if C.actionbar.enable ~= true then return end
 --	Style ActionBars buttons(by Tukz)
 ----------------------------------------------------------------------------------------
 local function StyleNormalButton(button, size)
+	T.StyleActionButtonCooldowns(button)
 	if not button.isSkinned then
 		local name = button:GetName()
 		local icon = _G[name.."Icon"]
@@ -191,6 +192,7 @@ local function StyleNormalButton(button, size)
 end
 
 local function StyleSmallButton(button, name, isPet)
+	T.StyleActionButtonCooldowns(button)
 	if not button.isSkinned then
 		local flash = _G[name.."Flash"]
 		local hotkey = _G[name.."HotKey"]
@@ -282,6 +284,7 @@ frame:SetScript("OnEvent", function()
 end)
 
 local function SetupFlyoutButton(button)
+	T.StyleActionButtonCooldowns(button)
 	if button:GetHeight() ~= C.actionbar.button_size and not InCombatLockdown() then
 		button:SetSize(C.actionbar.button_size, C.actionbar.button_size)
 	end
@@ -433,12 +436,5 @@ hooksecurefunc(AssistedCombatManager, "SetAssistedHighlightFrameShown", function
 	end
 end)
 
-----------------------------------------------------------------------------------------
---	Cooldowns
-----------------------------------------------------------------------------------------
-local Cooldown_MT = getmetatable(_G.ActionButton1Cooldown).__index
-hooksecurefunc(Cooldown_MT, "SetCooldown", function(cooldown)
-	if cooldown:IsForbidden() then return end
-
-	T.SkinCooldown(cooldown, "actionbar")
-end)
+-- Cooldown styling is applied with each button above, without a shared
+-- SetCooldown hook that can interfere with Blizzard's secret-value calls.

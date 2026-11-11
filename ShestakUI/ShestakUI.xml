@@ -80,6 +80,7 @@
 	<Script file="Modules\Trade\TrainAll.lua"/>
 
 	<Script file="Modules\ActionBars\Core.lua"/>
+	<Script file="Modules\ActionBars\Cooldowns.lua"/>
 	<Script file="Modules\ActionBars\Bindings.lua"/>
 	<Script file="Modules\ActionBars\Bar1.lua"/>
 	<Script file="Modules\ActionBars\Bar2.lua"/>

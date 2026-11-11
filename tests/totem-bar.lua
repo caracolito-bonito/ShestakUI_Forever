@@ -43,7 +43,7 @@ function hooksecurefunc(target, method, callback)
 end
 local function setup(class, enabled, hasBar)
 	combat, frames, hooks, timers = false, {}, {}, {}
-	ShestakUI = {{class = class}, {actionbar = {enable = enabled, button_size = 30, button_space = 4}}, {}}
+	ShestakUI = {{class = class, StyleActionButtonCooldowns = function() end}, {actionbar = {enable = enabled, button_size = 30, button_space = 4}}, {}}
 	NUM_MULTI_CAST_PAGES, NUM_MULTI_CAST_BUTTONS_PER_PAGE = 3, 4
 	TotemBarAnchor = nil
 	MultiCastActionBarFrame = hasBar and object("MultiCastActionBarFrame") or nil

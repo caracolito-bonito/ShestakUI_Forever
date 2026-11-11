@@ -19,6 +19,7 @@ anchor:SetFrameStrata("LOW")
 
 local function StyleButton(button, buttonSize)
 	if not button or button.totemSkinned then return end
+	T.StyleActionButtonCooldowns(button)
 	local name = button:GetName()
 	button:SetSize(buttonSize, buttonSize)
 	button:SetNormalTexture(0)
