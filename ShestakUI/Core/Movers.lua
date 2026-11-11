@@ -45,6 +45,10 @@ T.MoverFrames = {
 	PrivateAnchor
 }
 
+if TotemBarAnchor then
+	tinsert(T.MoverFrames, TotemBarAnchor)
+end
+
 if C.actionbar.bar7_enable then
 	tinsert(T.MoverFrames, Bar7Holder)
 end
