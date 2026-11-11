@@ -14,6 +14,10 @@ function methods:SetScale(value) assert(not combat); self.scale = value end
 function methods:SetParent(parent) assert(not combat); self.parent = parent end
 function methods:SetFrameStrata() end
 function methods:SetNormalTexture() end
+function methods:GetNormalTexture() return self.normal end
+function methods:SetAlpha(value) self.alpha = value end
+function methods:Hide() self.shown = false end
+function methods:SetInside() assert(not combat) end
 function methods:SetTemplate() self.styled = true end
 function methods:SetBackdropBorderColor() end
 function methods:StyleButton() end
@@ -66,6 +70,15 @@ local function setup(class, enabled, hasBar)
 	for i = 1, 4 do _G["MultiCastSlotButton"..i] = object("MultiCastSlotButton"..i) end
 	for i = 1, 12 do _G["MultiCastActionButton"..i] = object("MultiCastActionButton"..i) end
 	for i = 1, 3 do _G["MultiCastActionPage"..i] = object("MultiCastActionPage"..i) end
+	for _, prefix in ipairs({"MultiCastActionButton", "MultiCastSlotButton", "MultiCastSummonSpellButton", "MultiCastRecallSpellButton"}) do
+		local count = prefix == "MultiCastActionButton" and 12 or prefix == "MultiCastSlotButton" and 4 or 1
+		for i = 1, count do
+			local button = _G[prefix..i] or _G[prefix]
+			for _, key in ipairs({"normal", "overlayTex", "SlotArt", "SlotBackground", "NewActionTexture", "IconMask"}) do
+				button[key] = object()
+			end
+		end
+	end
 	assert(loadfile(module))()
 end
 local function fire(event) TotemBarAnchor.scripts.OnEvent(TotemBarAnchor, event) end
@@ -78,19 +91,19 @@ MultiCastActionBarFrame.numActiveSlots = 4
 fire("PLAYER_LOGIN")
 assert(MultiCastActionBarFrame.parent == TotemBarAnchor)
 assert(TotemBarAnchor.parent == T_PetBattleFrameHider)
-assert(TotemBarAnchor.width == 200)
-assert(MultiCastSlotButton1.point[4] == 34)
-assert(MultiCastRecallSpellButton.point[4] == 170)
+assert(TotemBarAnchor.width == 226)
+assert(MultiCastSlotButton1.point[4] == 41)
+assert(MultiCastRecallSpellButton.point[4] == 193)
 for i = 1, 12 do
 	local button = _G["MultiCastActionButton"..i]
 	assert(button.styled and button.width == 30)
-	assert(button.point[4] == ((i - 1) % 4) * 34)
+	assert(button.point[4] == ((i - 1) % 4) * 38)
 end
 -- Learning/unlearning summon and recall spells, with fewer available slots.
 MultiCastSummonSpellButton.shown, MultiCastRecallSpellButton.shown = false, false
 MultiCastActionBarFrame.numActiveSlots = 2
 hooks.MultiCastActionBarFrame_Update()
-assert(TotemBarAnchor.width == 64 and MultiCastSlotButton1.point[4] == 0)
+assert(TotemBarAnchor.width == 74 and MultiCastSlotButton1.point[4] == 3)
 -- Edit Mode must not steal the ShestakUI anchor.
 MultiCastActionBarFrame:SetPoint("BOTTOM", ActionBarAnchor, "BOTTOM", 50, 50)
 assert(MultiCastActionBarFrame.point[2] == TotemBarAnchor)
@@ -111,10 +124,39 @@ assert(TotemBarAnchor.point == savedAnchor, "do not reset the user's mover posit
 combat = true
 MultiCastActionBarFrame.numActiveSlots = 4
 hooks.MultiCastActionBarFrame_Update()
-assert(TotemBarAnchor.width == 64 and TotemBarAnchor.events.PLAYER_REGEN_ENABLED)
+assert(TotemBarAnchor.width == 74 and TotemBarAnchor.events.PLAYER_REGEN_ENABLED)
 combat = false
 fire("PLAYER_REGEN_ENABLED")
-assert(TotemBarAnchor.width == 132 and not TotemBarAnchor.events.PLAYER_REGEN_ENABLED)
+assert(TotemBarAnchor.width == 150 and not TotemBarAnchor.events.PLAYER_REGEN_ENABLED)
+-- Reproduce a set switch during combat: Blizzard restores decorative art and
+-- reanchors all pages/slot 1 using its hard-coded 8px gaps and 3px padding.
+setup("SHAMAN", true, true)
+MultiCastActionBarFrame.numActiveSlots = 4
+fire("PLAYER_LOGIN")
+combat = true
+for page = 1, 3 do
+	local frame = _G["MultiCastActionPage"..page]
+	local x, y = frame.point[4], frame.point[5]
+	local nativeOffset = MultiCastSummonSpellButton.width + 8 + 3
+	assert(x == nativeOffset and y == 3, "native update must not move a styled page")
+	frame.point = {"BOTTOMLEFT", MultiCastActionBarFrame, "BOTTOMLEFT", nativeOffset, 3}
+end
+assert(MultiCastSlotButton1.point[4] == 41 and MultiCastSlotButton1.point[5] == 3)
+for i = 1, 12 do
+	local button = _G["MultiCastActionButton"..i]
+	button.normal.alpha, button.overlayTex.alpha, button.SlotBackground.alpha = 1, 1, 1
+	button.IconMask.shown = true
+	hooks.MultiCastActionButton_Update(button)
+	assert(button.normal.alpha == 0 and button.overlayTex.alpha == 0 and button.SlotBackground.alpha == 0)
+	assert(not button.IconMask.shown)
+end
+MultiCastSummonSpellButton.normal.alpha = 1
+hooks.MultiCastSummonSpellButton_Update(MultiCastSummonSpellButton)
+assert(MultiCastSummonSpellButton.normal.alpha == 0)
+MultiCastSlotButton1.overlayTex.alpha = 1
+hooks.MultiCastActionBarFrame_Update()
+assert(MultiCastSlotButton1.overlayTex.alpha == 0)
+assert(TotemBarAnchor.events.PLAYER_REGEN_ENABLED, "geometry remains deferred in combat")
 -- Reloading in combat must also defer initialization and parenting.
 setup("SHAMAN", true, true)
 combat = true

@@ -16,7 +16,11 @@ git diff --check
 The mock test checks class/config guards, all three pages, layout with and
 without summon/recall spells, Edit Mode reanchoring, deferred combat updates,
 and initialization after a combat reload. It does not simulate WoW's secure
-execution or prove the absence of taint.
+execution or prove the absence of taint. Combat set-switch regression coverage
+also checks that restoring Blizzard art cannot leave it visible, and that the
+page layout matches Blizzard's own 8px gaps and 3px padding. These internal
+spacings intentionally remain native so Blizzard's combat reanchoring does
+not move the styled buttons; button size still follows ShestakUI settings.
 
 ## In-game checklist
 
@@ -33,7 +37,9 @@ execution or prove the absence of taint.
 6. Use `/moveui` to move `TotemBar`; leave move mode, `/reload`, and verify
    the position is retained. Enter/exit Blizzard Edit Mode if available.
 7. Enter combat and test casting, bindings, summon/recall, and flyout behavior.
-   Check for blocked-action/taint errors. Also reload while in combat and
+   Repeatedly switch between two learned sets while in combat: icons and
+   frames must stay aligned, without Blizzard borders returning. Check for
+   blocked-action/taint errors. Also reload while in combat and
    verify the bar is integrated after combat ends.
 8. Check a low-level shaman without summon/recall spells, another class, and
    ShestakUI with action bars disabled. Default bars should remain unchanged
