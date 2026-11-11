@@ -7,6 +7,9 @@ if C.misc.raid_tools ~= true then return end
 -- Create main frame
 local RaidUtilityPanel = CreateFrame("Frame", "RaidUtilityPanel", T_PetBattleFrameHider)
 RaidUtilityPanel:CreatePanel("Transparent", 170, 145, unpack(C.position.raid_utility))
+-- Keep raid controls above LOW-strata world-widget ModelScenes, which can
+-- cover the button's interior and intercept mouse input.
+RaidUtilityPanel:SetFrameStrata("MEDIUM")
 if GetCVarBool("watchFrameWidth") then
 	RaidUtilityPanel:SetPoint(C.position.raid_utility[1], C.position.raid_utility[2], C.position.raid_utility[3], C.position.raid_utility[4] + 100, C.position.raid_utility[5])
 end
@@ -42,6 +45,8 @@ end
 
 -- Show button
 CreateButton("RaidUtilityShowButton", T_PetBattleFrameHider, "UIPanelButtonTemplate, SecureHandlerClickTemplate", RaidUtilityPanel:GetWidth() / 1.5, 18, "TOP", RaidUtilityPanel, "TOP", 0, 0, RAID_CONTROL)
+-- This button is a sibling of the panel, so it does not inherit its strata.
+RaidUtilityShowButton:SetFrameStrata("MEDIUM")
 RaidUtilityShowButton:SetFrameRef("RaidUtilityPanel", RaidUtilityPanel)
 RaidUtilityShowButton:SetAttribute("_onclick", [=[self:Hide(); self:GetFrameRef("RaidUtilityPanel"):Show();]=])
 RaidUtilityShowButton:SetScript("OnMouseUp", function(_, button)
