@@ -4172,8 +4172,11 @@ C["filger_spells"] = {
 -- Common colldowns for all classes
 T.CustomFilgerSpell = T.CustomFilgerSpell or {}
 T.FilgerIgnoreSpell = T.FilgerIgnoreSpell or {}
--- Revelation (Forever weapon enchant proc), alongside other player procs.
-tinsert(T.CustomFilgerSpell, {"P_PROC_ICON", {spellID = 1248808, unitID = "player", caster = "all", filter = "BUFF", absID = true}})
+-- Revelation uses different proc aura IDs per class in Forever.
+local revelationProc = ({MAGE = 1248808, SHAMAN = 1323418})[T.class]
+if revelationProc then
+	tinsert(T.CustomFilgerSpell, {"P_PROC_ICON", {spellID = revelationProc, unitID = "player", caster = "all", filter = "BUFF", absID = true}})
+end
 do
 	-- Racial
 	local _, race = UnitRace("player")

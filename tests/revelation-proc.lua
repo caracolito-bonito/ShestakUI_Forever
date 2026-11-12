@@ -15,15 +15,20 @@ local function setup(class)
 	assert(loadfile(module))()
 	return T, C
 end
+local revelationIDs = {SHAMAN = 1323418, MAGE = 1248808}
 for _, class in ipairs({"SHAMAN", "PRIEST", "MAGE"}) do
 	local T, C = setup(class)
-	assert(T.Filger_P_PROC[1248808], "Revelation must reach the active player's proc filter")
-	assert(not T.Filger_P_BUFF[1248808] and not T.Filger_T_DEBUFF[1248808])
+	local expected = revelationIDs[class]
+	for _, id in pairs(revelationIDs) do
+		assert(not not T.Filger_P_PROC[id] == (id == expected), "only register the class-specific Revelation aura")
+		assert(not T.Filger_P_BUFF[id] and not T.Filger_T_DEBUFF[id])
+	end
 	if class == "SHAMAN" then assert(T.Filger_P_PROC[16246], "keep Clearcasting in the same proc block") end
 	local matches = 0
 	for _, group in ipairs(C.filger_spells[class]) do
 		for _, spell in ipairs(group) do
-			if spell.spellID == 1248808 then
+			if spell.spellID == 1248808 or spell.spellID == 1323418 then
+				assert(spell.spellID == expected)
 				matches = matches + 1
 				assert(group.Name == "P_PROC_ICON")
 				assert(spell.unitID == "player" and spell.filter == "BUFF" and spell.absID)
@@ -31,11 +36,11 @@ for _, class in ipairs({"SHAMAN", "PRIEST", "MAGE"}) do
 			end
 		end
 	end
-	assert(matches == 1, "do not duplicate the proc")
+	assert(matches == (expected and 1 or 0), "register exactly one confirmed proc for supported classes")
 end
 -- Execute the actual PProc AddGroup declaration, not a separate test filter.
 local T = setup("SHAMAN")
-file = assert(io.open("ShestakUI/Modules/UnitFrames/Functions.lua"))
+local file = assert(io.open("ShestakUI/Modules/UnitFrames/Functions.lua"))
 local source = file:read("*a")
 file:close()
 local declaration = assert(source:match('(self%.PProc:AddGroup%(".-\n\t\t\t}%))'))
@@ -45,6 +50,7 @@ assert(loadstring("local self, T = ...\n"..declaration))(self, T)
 assert(captured[1] == "HELPFUL", "must not reject source-less enchant procs with PLAYER")
 assert(captured[2].maxFrameCount == 6)
 local whitelist = captured[2].candidateFilters.includeSpellIDs
-assert(whitelist == T.Filger_P_PROC and whitelist[1248808] and whitelist[16246])
+assert(whitelist == T.Filger_P_PROC and whitelist[1323418] and whitelist[16246])
+assert(not whitelist[1248808], "do not use the Mage proc ID on a Shaman")
 assert(not whitelist[999999], "do not allow unrelated buffs into the proc group")
 print("Revelation proc filter and aura-source tests passed")
