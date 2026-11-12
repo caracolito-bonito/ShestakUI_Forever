@@ -1290,9 +1290,7 @@ T.CreateFilgerAuras = function(self, unit)
 			self.PProc.tooltipOffsetY = 3
 			self.PProc.disableMouse = not C.filger.show_tooltip
 
-			-- Enchant/item procs can have no player source. The spell-ID
-			-- whitelist still limits this group to explicitly configured procs.
-			self.PProc:AddGroup("HELPFUL", {
+			self.PProc:AddGroup("HELPFUL|PLAYER", {
 				maxFrameCount = 6,
 				candidateFilters = {includeSpellIDs = T.Filger_P_PROC}
 			})
