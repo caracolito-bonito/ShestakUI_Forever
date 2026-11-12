@@ -354,6 +354,15 @@ local function AddTestAlert(system, ...)
 	if system and type(system.AddAlert) == "function" then system:AddAlert(...) end
 end
 
+local function HasHousingPreviewAssets()
+	if not C_Texture or not C_Texture.GetAtlasInfo then return false end
+	-- The virtual template exists in Forever, but its retail artwork may not.
+	for _, suffix in ipairs({"glow", "background", "lightrays01", "lightrays02", "sparkles-flipbook", "frame", "leaf01", "leaf04", "leaf02", "leaf06", "leaf03", "divider"}) do
+		if not C_Texture.GetAtlasInfo("housing-item-toast-"..suffix) then return false end
+	end
+	return true
+end
+
 SlashCmdList.TEST_ACHIEVEMENT = function()
 	PlaySound(SOUNDKIT.LFG_REWARDS)
 	if not AchievementFrame and AchievementFrame_LoadUI then
@@ -383,7 +392,9 @@ SlashCmdList.TEST_ACHIEVEMENT = function()
 	if source and source.itemID then AddTestAlert(NewCosmeticAlertFrameSystem, 204) end
 	local scene = C_WarbandScene and C_WarbandScene.GetWarbandSceneEntry and C_WarbandScene.GetWarbandSceneEntry(1)
 	if scene then AddTestAlert(NewWarbandSceneAlertSystem, 1) end
-	AddTestAlert(HousingItemEarnedAlertFrameSystem, {itemType = 2, itemName = "Test"})
+	if HousingItemEarnedAlertFrameSystem and HasHousingPreviewAssets() then
+		AddTestAlert(HousingItemEarnedAlertFrameSystem, {itemType = 2, itemName = "Test"})
+	end
 end
 SLASH_TEST_ACHIEVEMENT1 = "/tach"
 SLASH_TEST_ACHIEVEMENT2 = "/ефср"

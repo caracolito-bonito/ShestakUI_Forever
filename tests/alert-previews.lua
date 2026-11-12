@@ -10,6 +10,7 @@ function PlaySound() end
 local function setup(available, valid)
 	calls, known = {}, valid
 	SlashCmdList = {}
+	C_Texture = {GetAtlasInfo = function() return {} end}
 	AchievementFrame, AchievementFrame_LoadUI = nil, nil
 	C_Garrison, C_LegendaryCrafting, C_TransmogCollection, C_WarbandScene, AlertFrameMixin = nil, nil, nil, nil, nil
 	for _, name in ipairs(systems) do
@@ -52,4 +53,17 @@ C_TransmogCollection.GetSourceInfo = function() return {} end
 SlashCmdList.TEST_ACHIEVEMENT()
 assert(not calls.NewCosmeticAlertFrameSystem, "cosmetic preview requires an itemID")
 assert(calls.NewWarbandSceneAlertSystem)
-print("Alert preview data tests passed")
+for _, missing in ipairs({"glow", "lightrays02", "divider"}) do
+	calls = {}
+	C_Texture.GetAtlasInfo = function(atlas)
+		if atlas ~= "housing-item-toast-"..missing then return {} end
+	end
+	SlashCmdList.TEST_ACHIEVEMENT()
+	assert(not calls.HousingItemEarnedAlertFrameSystem, "must not instantiate a template with missing atlas "..missing)
+	assert(calls.MoneyWonAlertSystem, "other previews must remain available")
+end
+calls = {}
+C_Texture = nil
+SlashCmdList.TEST_ACHIEVEMENT()
+assert(not calls.HousingItemEarnedAlertFrameSystem)
+print("Alert preview data and atlas tests passed")
