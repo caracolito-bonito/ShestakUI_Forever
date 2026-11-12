@@ -281,7 +281,7 @@ SkinBlizzUI:SetScript("OnEvent", function(_, _, addon)
 						frame.backdrop:SetFrameLevel(frame:GetFrameLevel() - 1)
 					end
 				else
-					frame:CreateBackdrop("Transparent") -- :SetTemplate errors out
+					T.CreateMenuBackdrop(frame) -- no Lua arithmetic on secret menu dimensions
 					frame.backdrop:SetInside(frame, 0, 0)
 					frame.backdrop:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", 0, 8)
 					backdrops[frame] = frame.backdrop
