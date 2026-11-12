@@ -10,6 +10,7 @@ From the repository root:
 
 ```sh
 luajit tests/totem-bar.lua
+luajit tests/totem-cooldowns.lua
 git diff --check
 ```
 
@@ -21,6 +22,17 @@ also checks that restoring Blizzard art cannot leave it visible, and that the
 page layout matches Blizzard's own 8px gaps and 3px padding. These internal
 spacings intentionally remain native so Blizzard's combat reanchoring does
 not move the styled buttons; button size still follows ShestakUI settings.
+
+## Summon/recall cooldown regression
+
+The 2026-11-13 taint log captured repeated failures along
+`MultiCastSpellButton_UpdateCooldown -> CooldownFrame_Set` at the legacy
+helper's numeric comparisons. Summon/recall now use
+`C_Spell.GetSpellCooldownDuration` and `SetCooldownFromDurationObject` without
+reading numeric cooldown values. The test rejects the legacy numeric APIs
+and checks both buttons and the no-duration case. This is not proof that the
+separately reported `ActionButton_ApplyCooldown -> SetCooldown` error on
+ordinary action bars has the same cause or is fixed.
 
 ## In-game checklist
 
@@ -39,8 +51,11 @@ not move the styled buttons; button size still follows ShestakUI settings.
 7. Enter combat and test casting, bindings, summon/recall, and flyout behavior.
    Repeatedly switch between two learned sets while in combat: icons and
    frames must stay aligned, without Blizzard borders returning. Check for
-   blocked-action/taint errors. Also reload while in combat and
-   verify the bar is integrated after combat ends.
+   blocked-action/taint errors. In a dungeon, use a learned Call of the...
+   summon spell during combat, then recall the totems. Check both buttons'
+   cooldown spirals/countdowns, including the global cooldown and clearing
+   when complete. Also reload while in combat and verify the bar is integrated
+   after combat ends.
 8. Check a low-level shaman without summon/recall spells, another class, and
    ShestakUI with action bars disabled. Default bars should remain unchanged
    in the latter two cases.
