@@ -17,6 +17,13 @@ C["toggleprefix"] = {
 	["Stubby"]		= "Auc-Advanced",
 }
 
+-- Some modules intentionally do not load on this client even when their
+-- setting is enabled. Only invoke preview commands that were registered.
+local function RunUITest(command)
+	local callback = SlashCmdList[command]
+	if type(callback) == "function" then callback() end
+end
+
 -- Define buttons in main menu and corresponding functions
 C["togglemainmenu"] = {
 	{
@@ -54,26 +61,26 @@ C["togglemainmenu"] = {
 		["text"] = "Test UI",
 		["function"] = function()
 			if C.raidcooldown.enable == true then
-				SlashCmdList.RaidCD()
+				RunUITest("RaidCD")
 			end
 			if C.enemycooldown.enable == true then
-				SlashCmdList.EnemyCD()
+				RunUITest("EnemyCD")
 			end
 			if C.pulsecooldown.enable == true then
-				SlashCmdList.PulseCD()
+				RunUITest("PulseCD")
 			end
 			if C.unitframe.enable == true then
-				SlashCmdList.TEST_UF()
+				RunUITest("TEST_UF")
 			end
 			if C.loot.rolllootframe == true then
-				SlashCmdList.TESTROLL()
+				RunUITest("TESTROLL")
 			end
 			if C.threat.enable == true then
-				SlashCmdList.alThreat()
+				RunUITest("alThreat")
 			end
-			SlashCmdList.DBMTEST()
-			SlashCmdList.TEST_EXTRABUTTON()
-			SlashCmdList.TEST_ACHIEVEMENT()
+			RunUITest("DBMTEST")
+			RunUITest("TEST_EXTRABUTTON")
+			RunUITest("TEST_ACHIEVEMENT")
 			--SlashCmdList.GRIDONSCREEN()
 		end
 	},
