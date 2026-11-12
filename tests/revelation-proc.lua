@@ -27,9 +27,24 @@ for _, class in ipairs({"SHAMAN", "PRIEST", "MAGE"}) do
 				matches = matches + 1
 				assert(group.Name == "P_PROC_ICON")
 				assert(spell.unitID == "player" and spell.filter == "BUFF" and spell.absID)
+				assert(spell.caster == "all", "enchant procs may not have a player source")
 			end
 		end
 	end
 	assert(matches == 1, "do not duplicate the proc")
 end
-print("Revelation proc filter tests passed")
+-- Execute the actual PProc AddGroup declaration, not a separate test filter.
+local T = setup("SHAMAN")
+file = assert(io.open("ShestakUI/Modules/UnitFrames/Functions.lua"))
+local source = file:read("*a")
+file:close()
+local declaration = assert(source:match('(self%.PProc:AddGroup%(".-\n\t\t\t}%))'))
+local captured
+local self = {PProc = {AddGroup = function(_, filter, options) captured = {filter, options} end}}
+assert(loadstring("local self, T = ...\n"..declaration))(self, T)
+assert(captured[1] == "HELPFUL", "must not reject source-less enchant procs with PLAYER")
+assert(captured[2].maxFrameCount == 6)
+local whitelist = captured[2].candidateFilters.includeSpellIDs
+assert(whitelist == T.Filger_P_PROC and whitelist[1248808] and whitelist[16246])
+assert(not whitelist[999999], "do not allow unrelated buffs into the proc group")
+print("Revelation proc filter and aura-source tests passed")

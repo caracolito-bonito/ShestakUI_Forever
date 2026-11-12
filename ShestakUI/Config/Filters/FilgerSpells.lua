@@ -4173,7 +4173,7 @@ C["filger_spells"] = {
 T.CustomFilgerSpell = T.CustomFilgerSpell or {}
 T.FilgerIgnoreSpell = T.FilgerIgnoreSpell or {}
 -- Revelation (Forever weapon enchant proc), alongside other player procs.
-tinsert(T.CustomFilgerSpell, {"P_PROC_ICON", {spellID = 1248808, unitID = "player", caster = "player", filter = "BUFF", absID = true}})
+tinsert(T.CustomFilgerSpell, {"P_PROC_ICON", {spellID = 1248808, unitID = "player", caster = "all", filter = "BUFF", absID = true}})
 do
 	-- Racial
 	local _, race = UnitRace("player")
