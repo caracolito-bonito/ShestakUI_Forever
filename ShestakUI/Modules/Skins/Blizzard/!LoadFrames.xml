@@ -1,4 +1,5 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
+	<Script file="MenuBackdrop.lua"/>
 	<Script file="Others.lua"/>
 	<Script file="Achievement.lua"/>
 	<Script file="AddonList.lua"/>
