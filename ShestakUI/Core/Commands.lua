@@ -350,40 +350,40 @@ SLASH_CLEAR_CHAT2 = "/сдуфк"
 ----------------------------------------------------------------------------------------
 --	Test Blizzard Alerts
 ----------------------------------------------------------------------------------------
+local function AddTestAlert(system, ...)
+	if system and type(system.AddAlert) == "function" then system:AddAlert(...) end
+end
+
 SlashCmdList.TEST_ACHIEVEMENT = function()
 	PlaySound(SOUNDKIT.LFG_REWARDS)
-	if not AchievementFrame then
+	if not AchievementFrame and AchievementFrame_LoadUI then
 		AchievementFrame_LoadUI()
 	end
-	AchievementAlertSystem:AddAlert(112)
-	CriteriaAlertSystem:AddAlert(9023, "Doing great!")
-	GuildChallengeAlertSystem:AddAlert(3, 2, 5)
-	InvasionAlertSystem:AddAlert(678, DUNGEON_FLOOR_THENEXUS1, true, 1, 1)
-	WorldQuestCompleteAlertSystem:AddAlert(AlertFrameMixin:BuildQuestData(42114))
-	-- GarrisonFollowerAlertSystem:AddAlert(32, "Dagg", 90, 2, true, C_Garrison.GetFollowerInfo(32))
-	-- GarrisonShipFollowerAlertSystem:AddAlert(592, "Ship", "Transport", "GarrBuilding_Barracks_1_H", 3, 2, 1)
-	GarrisonBuildingAlertSystem:AddAlert(GARRISON_CACHE)
-	GarrisonTalentAlertSystem:AddAlert(3, _G.C_Garrison.GetTalentInfo(370))
-	-- LegendaryItemAlertSystem:AddAlert("|cffa335ee|Hitem:158712::::::::60:66::16:4:6534:6513:1533:4786::::|h[Rezan's Gleaming Eye]|h|r")
-	-- LootAlertSystem:AddAlert("|cffa335ee|Hitem:158712::::::::60:66::16:4:6534:6513:1533:4786::::|h[Rezan's Gleaming Eye]|h|r", 1, 1, 100, 2, false, false, 0, false, false)
-	-- LootUpgradeAlertSystem:AddAlert("|cffa335ee|Hitem:158712::::::::60:66::16:4:6534:6513:1533:4786::::|h[Rezan's Gleaming Eye]|h|r", 1, 1, 1, nil, nil, false)
-	MoneyWonAlertSystem:AddAlert(81500)
-	EntitlementDeliveredAlertSystem:AddAlert("", "Interface\\Icons\\Ability_pvp_gladiatormedallion", TRINKET0SLOT, 214)
-	RafRewardDeliveredAlertSystem:AddAlert("", "Interface\\Icons\\Ability_pvp_gladiatormedallion", TRINKET0SLOT, 214, nil, 2)
-	-- DigsiteCompleteAlertSystem:AddAlert("Human")
-	NewRecipeLearnedAlertSystem:AddAlert(204)
-	NewRuneforgePowerAlertSystem:AddAlert(204)
-	NewCosmeticAlertFrameSystem:AddAlert(204)
-	NewWarbandSceneAlertSystem:AddAlert(1)
-	do
-		local rewardData = {}
-		rewardData.itemType = 2
-		rewardData.itemName = "Test"
-		-- rewardData.icon = 7252953
-		HousingItemEarnedAlertFrameSystem:AddAlert(rewardData)
+	AddTestAlert(AchievementAlertSystem, 112)
+	AddTestAlert(CriteriaAlertSystem, 9023, "Doing great!")
+	AddTestAlert(GuildChallengeAlertSystem, 3, 2, 5)
+	AddTestAlert(InvasionAlertSystem, 678, DUNGEON_FLOOR_THENEXUS1, true, 1, 1)
+	if WorldQuestCompleteAlertSystem and AlertFrameMixin and AlertFrameMixin.BuildQuestData then
+		local questData = AlertFrameMixin:BuildQuestData(42114)
+		if questData then AddTestAlert(WorldQuestCompleteAlertSystem, questData) end
 	end
-	-- InitiativeTaskCompleteAlertFrameSystem:AddAlert("Test")
-	-- BonusRollFrame_StartBonusRoll(242969, 'test', 20, 515, 15, 14)
+	AddTestAlert(GarrisonBuildingAlertSystem, GARRISON_CACHE)
+	local talent = C_Garrison and C_Garrison.GetTalentInfo and C_Garrison.GetTalentInfo(370)
+	if talent then AddTestAlert(GarrisonTalentAlertSystem, 3, talent) end
+	AddTestAlert(MoneyWonAlertSystem, 81500)
+	AddTestAlert(EntitlementDeliveredAlertSystem, "", "Interface\\Icons\\Ability_pvp_gladiatormedallion", TRINKET0SLOT, 214)
+	AddTestAlert(RafRewardDeliveredAlertSystem, "", "Interface\\Icons\\Ability_pvp_gladiatormedallion", TRINKET0SLOT, 214, nil, 2)
+	AddTestAlert(NewRecipeLearnedAlertSystem, 204)
+
+	-- Retail example IDs are not necessarily present in Forever. Validate
+	-- their data before enqueueing: Blizzard's setup functions dereference it.
+	local power = C_LegendaryCrafting and C_LegendaryCrafting.GetRuneforgePowerInfo and C_LegendaryCrafting.GetRuneforgePowerInfo(204)
+	if power then AddTestAlert(NewRuneforgePowerAlertSystem, 204) end
+	local source = C_TransmogCollection and C_TransmogCollection.GetSourceInfo and C_TransmogCollection.GetSourceInfo(204)
+	if source and source.itemID then AddTestAlert(NewCosmeticAlertFrameSystem, 204) end
+	local scene = C_WarbandScene and C_WarbandScene.GetWarbandSceneEntry and C_WarbandScene.GetWarbandSceneEntry(1)
+	if scene then AddTestAlert(NewWarbandSceneAlertSystem, 1) end
+	AddTestAlert(HousingItemEarnedAlertFrameSystem, {itemType = 2, itemName = "Test"})
 end
 SLASH_TEST_ACHIEVEMENT1 = "/tach"
 SLASH_TEST_ACHIEVEMENT2 = "/ефср"
