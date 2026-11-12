@@ -185,8 +185,13 @@ local CreateBar = function()
 	return bar
 end
 
-local StartTimer = function(name, spellId)
+local StartTimer = function(name, spellId, previewDuration)
 	local spell, _, icon = GetSpellInfo(spellId)
+	local duration = T.RaidSpells[spellId] or previewDuration
+	if not spell then return end
+	-- Preview spells need not be enabled in the user's tracking list. Never
+	-- create a partially initialized bar for an unconfigured live cooldown.
+	if not (charges and spellId == 20484) and (type(duration) ~= "number" or duration <= 0) then return end
 	if charges and spellId == 20484 then
 		for _, v in pairs(Ressesbars) do
 			UpdateCharges(v)
@@ -244,9 +249,9 @@ local StartTimer = function(name, spellId)
 		end
 	else
 		bar.startTime = GetTime()
-		bar.endTime = GetTime() + T.RaidSpells[spellId]
+		bar.endTime = bar.startTime + duration
 		bar.left:SetText(format("%s - %s", name:gsub("%-[^|]+", ""), spell))
-		bar.right:SetText(FormatTime(T.RaidSpells[spellId]))
+		bar.right:SetText(FormatTime(duration))
 		bar.isResses = false
 		bar.name = name
 		bar.spell = spell
@@ -350,9 +355,9 @@ f:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 f:RegisterEvent("ENCOUNTER_END")
 
 SlashCmdList.RaidCD = function()
-	StartTimer(UnitName("player"), 20484)	-- Rebirth
-	StartTimer(UnitName("player"), 871)		-- Shield Wall
-	StartTimer(UnitName("player"), 29166)	-- Innervate
+	StartTimer(UnitName("player"), 20484, 600)	-- Rebirth (preview fallback)
+	StartTimer(UnitName("player"), 871, 180)		-- Shield Wall (preview fallback)
+	StartTimer(UnitName("player"), 29166, 180)	-- Innervate (preview fallback)
 end
 SLASH_RaidCD1 = "/raidcd"
 SLASH_RaidCD2 = "/кфшвсв"
