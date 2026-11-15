@@ -820,7 +820,9 @@ T.CreateRaidBuffIcon = function(element, button)
 
 	-- TODO: add yellow color below 5 second? (1, 1, 0.2)
 	button.Cooldown:SetCountdownMillisecondsThreshold(0)
-	button.Cooldown:SetHideCountdownNumbers(not C.raidframe.plugins_buffs_timer)
+	local showTimer = element.showBuffTimer
+	if showTimer == nil then showTimer = C.raidframe.plugins_buffs_timer end
+	button.Cooldown:SetHideCountdownNumbers(not showTimer)
 
 	button:CreateBorder(nil, true)
 	button.oborder:SetOutside(button.Icon, 1, 1)
@@ -874,8 +876,9 @@ T.CreateAuraWatch = function(self)
 
 			auras.point = spell[2]
 			auras.color = spell[3]
+			auras.showBuffTimer = spell[6]
 
-			if not C.aura.show_timer then
+			if not C.aura.show_timer and not auras.showBuffTimer then
 				auras.disableCooldown = true
 			end
 
