@@ -30,7 +30,8 @@ if C.raidframe.plugins_buffs then
 			{10060, "RIGHT", {0.89, 0.1, 0.1}},					-- Power Infusion
 		},
 		SHAMAN = {
-			-- {408521, "TOPRIGHT", {0.7, 0.3, 0.7}, true},		-- Riptide [Season of Discovery]
+			-- Riptide: own HoT, green indicator; sixth field enables its timer.
+			{408521, "TOPRIGHT", {0.2, 0.8, 0.2}, nil, nil, true}, -- Riptide [Forever]
 			-- {974, "BOTTOMLEFT", {0.2, 0.7, 0.2}, true},			-- Earth Shield [Season of Discovery]
 			{29203, "BOTTOMRIGHT", {0.7, 0.4, 0}},				-- Healing Way (Change Color?)
 			{16177, "TOPLEFT", {0.4, 0.7, 0.2}},				-- Ancestral Fortitude
