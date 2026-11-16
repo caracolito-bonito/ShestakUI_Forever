@@ -2320,6 +2320,8 @@ C["filger_spells"] = {
 			-- Mana Spring Totem r4
 			{spellID = 10494, unitID = "player", caster = "player", filter = "BUFF", absID = true},
 			--]]
+			-- Maelstrom Weapon (stacking aura, not the talent/enchant spell) [Forever]
+			{spellID = 408505, unitID = "player", caster = "player", filter = "BUFF", absID = true},
 			-- Mental Dexterity [Season of Discovery]
 			-- {spellID = 415144, unitID = "player", caster = "player", filter = "BUFF"},
 			-- Nature's Swiftness
@@ -2363,8 +2365,6 @@ C["filger_spells"] = {
 			{spellID = 16246, unitID = "player", caster = "player", filter = "BUFF", absID = true},
 			-- Focused Casting (Eye of the Storm)
 			{spellID = 29063, unitID = "player", caster = "player", filter = "BUFF"},
-			-- Maelstrom Weapon [Season of Discovery]
-			{spellID = 409946, unitID = "player", caster = "player", filter = "BUFF"},
 			-- Power Surge [Season of Discovery]
 			{spellID = 415105, unitID = "player", caster = "player", filter = "BUFF"},
 			-- Shield Mastery [Season of Discovery]
