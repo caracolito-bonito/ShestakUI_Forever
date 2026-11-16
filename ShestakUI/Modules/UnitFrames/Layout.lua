@@ -71,6 +71,7 @@ local function Shared(self, unit)
 		self.Health.colorDisconnected = true
 		self.Health.colorClass = true
 		self.Health.colorReaction = true
+		self.Health.colorHappiness = true
 	end
 	if C.unitframe.plugins_smooth_bar then
 		self.Health.smoothing = Enum.StatusBarInterpolation.ExponentialEaseOut or 1
@@ -503,7 +504,7 @@ local function Shared(self, unit)
 	-- Debuff icons
 	if unit == "pet" and C.aura.pet_debuffs or unit == "focus" and C.aura.focus_debuffs
 	or unit == "focustarget" and C.aura.fot_debuffs or unit == "targettarget" and C.aura.tot_debuffs then
-		self.Debuffs = self:CreateAuras({
+		self.Debuffs = self:CreateAurasElement({
 			growthY = "DOWN",
 			layoutLimit = pet_width + 5
 		})
@@ -588,7 +589,7 @@ local function Shared(self, unit)
 		if unit == "player" then
 			-- Debuffs on player
 			if C.aura.player_auras then
-				self.Debuffs = self:CreateAuras({
+				self.Debuffs = self:CreateAurasElement({
 					initialAnchor = "BOTTOMRIGHT",
 					growthX = "LEFT",
 					layoutLimit = player_width + 5,
@@ -621,7 +622,7 @@ local function Shared(self, unit)
 		if unit == "target" then
 			-- Auras on target
 			if C.aura.target_auras then
-				self.Auras = self:CreateAuras({
+				self.Auras = self:CreateAurasElement({
 					initialAnchor = "BOTTOMLEFT",
 					growthX = "RIGHT",
 					growthY = "UP",
@@ -888,7 +889,7 @@ local function Shared(self, unit)
 		-- Crowd control icon
 		local anchor = C.unitframe.arena_on_right and "RIGHT" or "LEFT"
 		local growth = C.unitframe.arena_on_right and "LEFT" or "RIGHT"
-		self.Debuffs = self:CreateAuras({
+		self.Debuffs = self:CreateAurasElement({
 			initialAnchor = anchor,
 			growthY = "DOWN",
 			growthX = growth
@@ -960,7 +961,7 @@ local function Shared(self, unit)
 		if C.aura.boss_auras then
 			local anchor = C.unitframe.boss_on_right and "RIGHT" or "LEFT"
 			local growth = C.unitframe.boss_on_right and "LEFT" or "RIGHT"
-			self.Auras = self:CreateAuras({
+			self.Auras = self:CreateAurasElement({
 				initialAnchor = anchor,
 				growthY = "DOWN",
 				growthX = growth,

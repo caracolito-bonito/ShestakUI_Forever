@@ -29,7 +29,7 @@ assert(loadstring("local T, C = ...\n"..functions))(T, C)
 local function indicators(class)
 	T.class = class
 	local self = {created = {}}
-	function self:CreateAuras()
+	function self:CreateAurasElement()
 		local auras = object()
 		self.created[#self.created + 1] = auras
 		return auras

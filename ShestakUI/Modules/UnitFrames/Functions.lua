@@ -137,12 +137,24 @@ T.PostUpdateBackdropColor = function(element, color)
 	end
 end
 
+local health_color_curve = C_CurveUtil.CreateColorCurve()
+local health_color_low = CreateColor(1, 0, 0)
+local health_color_mid = CreateColor(1, 1, 0)
+local function updateCurve(r, g, b)
+	health_color_curve:ClearPoints()
+	health_color_curve:AddPoint(0.0, health_color_low)
+	health_color_curve:AddPoint(0.5, health_color_mid)
+	health_color_curve:AddPoint(1, CreateColor(r, g, b))
+	return health_color_curve
+end
+
 T.PostUpdateHealthColor = function(health, unit, color)
 	T.PostUpdateBackdropColor(health, color)
 
 	if not health.value then return end	-- arena target
+
+	local r, g, b
 	if UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit) then
-		local r, g, b
 		if (C.unitframe.own_color ~= true and C.unitframe.enemy_health_color and unit == "target" and UnitIsEnemy(unit, "player") and (UnitIsPlayer(unit) or UnitInPartyIsAI(unit))) or (C.unitframe.own_color ~= true and unit == "target" and not UnitIsPlayer(unit) and not UnitInPartyIsAI(unit) and UnitIsFriend(unit, "player")) then
 			local c = T.oUF_colors.reaction[UnitReaction(unit, "player")]
 			if c then
@@ -153,12 +165,18 @@ T.PostUpdateHealthColor = function(health, unit, color)
 			health:SetStatusBarColor(r, g, b)
 		end
 		if unit == "pet" then
-			local _, class = UnitClass("player")
-			local r, g, b = T.oUF_colors.class[class]:GetRGB()
 			if C.unitframe.own_color then
 				health:SetStatusBarColor(unpack(C.unitframe.uf_color))
 				health.bg:SetVertexColor(0.1, 0.1, 0.1)
 			else
+				local _, class = UnitClass("player")
+				r, g, b = T.oUF_colors.class[class]:GetRGB()
+
+				local cur_happiness = C_PetInfo.GetPetHappiness()
+				if cur_happiness and cur_happiness < 3 then
+					r, g, b = T.oUF_colors.happiness[(cur_happiness)]:GetRGB()
+				end
+
 				if b then
 					health:GetStatusBarTexture():SetVertexColor(r, g, b)
 					if health.bg and health.bg.multiplier then
@@ -173,19 +191,17 @@ T.PostUpdateHealthColor = function(health, unit, color)
 				r, g, b = C.unitframe.uf_color[1], C.unitframe.uf_color[2], C.unitframe.uf_color[3]
 			else
 				if color then
-					r, g, b = color:GetRGB()
+					if not r then -- don't rewrite pet class color
+						r, g, b = color:GetRGB()
+					end
 				else
 					r, g, b = 0.3, 0.7, 0.3
 				end
 			end
 
-			local curve = C_CurveUtil.CreateColorCurve()
-			curve:AddPoint(0.0, CreateColor(1, 0, 0))
-			curve:AddPoint(0.5, CreateColor(1, 1, 0))
-			curve:AddPoint(1, CreateColor(r, g, b))
-
-			local color = UnitHealthPercent(unit, true, curve)
-			local newr, newg, newb = color:GetRGB()
+			local curve = updateCurve(r, g, b)
+			local newcolor = UnitHealthPercent(unit, true, curve)
+			local newr, newg, newb = newcolor:GetRGB()
 			health:GetStatusBarTexture():SetVertexColor(newr, newg, newb)
 			if health.bg and health.bg.multiplier then
 				-- local mu = health.bg.multiplier -- can't calc secret value
@@ -277,11 +293,11 @@ end
 T.PostUpdateRaidHealthColor = function(health, unit, color)
 	T.PostUpdateBackdropColor(health, color)
 
+	local r, g, b
 	if UnitIsConnected(unit) and not UnitIsDeadOrGhost(unit) then
-		local r, g, b
 		if not UnitIsPlayer(unit) and not UnitInPartyIsAI(unit) and UnitIsFriend(unit, "player") and C.unitframe.own_color ~= true then
 			local c = T.oUF_colors.reaction[5]
-			local r, g, b = c:GetRGB()
+			r, g, b = c:GetRGB()
 			health:SetStatusBarColor(r, g, b)
 			if health.bg and health.bg.multiplier then
 				local mu = health.bg.multiplier
@@ -299,13 +315,9 @@ T.PostUpdateRaidHealthColor = function(health, unit, color)
 				end
 			end
 
-			local curve = C_CurveUtil.CreateColorCurve()
-			curve:AddPoint(0.0, CreateColor(1, 0, 0))
-			curve:AddPoint(0.5, CreateColor(1, 1, 0))
-			curve:AddPoint(1, CreateColor(r, g, b))
-
-			local color = UnitHealthPercent(unit, true, curve)
-			local newr, newg, newb = color:GetRGB()
+			local curve = updateCurve(r, g, b)
+			local newcolor = UnitHealthPercent(unit, true, curve)
+			local newr, newg, newb = newcolor:GetRGB()
 			health:GetStatusBarTexture():SetVertexColor(newr, newg, newb)
 			if health.bg and health.bg.multiplier then
 				-- local mu = health.bg.multiplier -- can't calc secret value
@@ -868,7 +880,7 @@ T.CreateAuraWatch = function(self)
 
 	if buffs then
 		for _, spell in pairs(buffs) do
-			local auras = self:CreateAuras()
+			local auras = self:CreateAurasElement()
 			auras.size = 7 * C.raidframe.icon_multiplier
 			auras:SetPoint(spell[2], 0, 0)
 			auras.showCount = true
@@ -1055,7 +1067,7 @@ T.CustomFilter = function(_, unit, data)
 end
 
 T.DispelColor = function(self)
-	local frame = self:CreateAuras()
+	local frame = self:CreateAurasElement()
 	frame:SetAllPoints(self.Health)
 	frame.disableMouse = true
 	frame.disableCooldown = true
@@ -1204,7 +1216,7 @@ T.CreateFilgerAuras = function(self, unit)
 	if unit == "player" then
 		if C.filger.show_pvp_player then
 			-- Crowd controls
-			self.CCDebuffs = self:CreateAuras({
+			self.CCDebuffs = self:CreateAurasElement({
 				growthX = "LEFT",
 				growthY = "UP",
 				initialAnchor = "TOPRIGHT",
@@ -1226,7 +1238,7 @@ T.CreateFilgerAuras = function(self, unit)
 		end
 		if C.filger.show_special then
 			-- Special buffs on player
-			self.SBuffs = self:CreateAuras({
+			self.SBuffs = self:CreateAurasElement({
 				growthX = "LEFT",
 				growthY = "UP",
 				initialAnchor = "TOPRIGHT",
@@ -1255,7 +1267,7 @@ T.CreateFilgerAuras = function(self, unit)
 		end
 		if C.filger.show_buff then
 			-- Player buffs
-			self.PBuffs = self:CreateAuras({
+			self.PBuffs = self:CreateAurasElement({
 				growthX = "LEFT",
 				growthY = "UP",
 				initialAnchor = "TOPRIGHT",
@@ -1278,7 +1290,7 @@ T.CreateFilgerAuras = function(self, unit)
 		end
 		if C.filger.show_proc then
 			-- Player's Proc
-			self.PProc = self:CreateAuras({
+			self.PProc = self:CreateAurasElement({
 				growthX = "RIGHT",
 				growthY = "UP",
 				layoutLimit = (C.filger.buffs_size + C.filger.buffs_space) * 6
@@ -1301,7 +1313,7 @@ T.CreateFilgerAuras = function(self, unit)
 	elseif unit == "target" then
 		if C.filger.show_pvp_target then
 			-- Crowd controls
-			self.CCDebuffsT = self:CreateAuras({
+			self.CCDebuffsT = self:CreateAurasElement({
 				growthX = "RIGHT",
 				growthY = "UP",
 				layoutLimit = C.filger.pvp_size + C.filger.pvp_space
@@ -1322,7 +1334,7 @@ T.CreateFilgerAuras = function(self, unit)
 		end
 		if C.filger.show_pvp_target then
 			-- Defensive spells on target
-			self.TBuffs = self:CreateAuras({
+			self.TBuffs = self:CreateAurasElement({
 				growthX = "RIGHT",
 				growthY = "UP",
 				layoutLimit = C.filger.pvp_size + C.filger.pvp_space
@@ -1346,7 +1358,7 @@ T.CreateFilgerAuras = function(self, unit)
 		end
 		if C.filger.show_debuff then
 			-- Player's Debuffs on target
-			self.PDebuffs = self:CreateAuras({
+			self.PDebuffs = self:CreateAurasElement({
 				growthX = "RIGHT",
 				growthY = "UP",
 				layoutLimit = (C.filger.buffs_size + C.filger.buffs_space) * 6
@@ -1368,7 +1380,7 @@ T.CreateFilgerAuras = function(self, unit)
 		end
 		if C.filger.show_aura_bar then
 			-- Player's Debuffs bar on target
-			self.BarDebuffs = self:CreateAuras({
+			self.BarDebuffs = self:CreateAurasElement({
 				growthX = "RIGHT",
 				growthY = "UP",
 				layoutLimit = 28,
@@ -1399,7 +1411,7 @@ T.CreateFilgerAuras = function(self, unit)
 	elseif unit == "focus" then
 		if C.filger.show_aura_bar then
 			-- CC Debuffs bar on focus
-			self.CCBarDebuffs = self:CreateAuras({
+			self.CCBarDebuffs = self:CreateAurasElement({
 				growthX = "RIGHT",
 				growthY = "UP",
 				layoutLimit = 28,

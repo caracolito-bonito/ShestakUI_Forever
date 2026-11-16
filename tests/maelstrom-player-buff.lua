@@ -36,11 +36,11 @@ assert(matches == 1)
 local file = assert(io.open("ShestakUI/Modules/UnitFrames/Functions.lua"))
 local source = file:read("*a")
 file:close()
-local declaration = assert(source:match('(self%.PBuffs = self:CreateAuras%(%{.-)\n\t\tend\n\t\tif C%.filger%.show_proc'))
+local declaration = assert(source:match('(self%.PBuffs = self:CreateAurasElement%(%{.-)\n\t\tend\n\t\tif C%.filger%.show_proc'))
 local container = {}
 function container:SetPoint(...) self.point = {...} end
 function container:AddGroup(filter, options) self.filter, self.options = filter, options end
-local self = {CreateAuras = function() return container end}
+local self = {CreateAurasElement = function() return container end}
 T.PostCreateFilgerIcon = function() end
 assert(loadstring("local self, T, C = ...\n"..declaration))(self, T, C)
 assert(container.showCount == true, "show Maelstrom Weapon's stack count")
