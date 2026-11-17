@@ -81,7 +81,6 @@
 
 	<Script file="Modules\ActionBars\Core.lua"/>
 	<Script file="Modules\ActionBars\Cooldowns.lua"/>
-	<Script file="Modules\ActionBars\DurationCooldowns.lua"/>
 	<Script file="Modules\ActionBars\TotemCooldowns.lua"/>
 	<Script file="Modules\ActionBars\Bindings.lua"/>
 	<Script file="Modules\ActionBars\Bar1.lua"/>
