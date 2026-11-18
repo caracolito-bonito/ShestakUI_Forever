@@ -30,8 +30,8 @@ Mocks do not prove the absence of taint in the client.
 
 A separate Druid report enters `GetActiveSpellID -> IsActiveSpell(5487)` from
 `UpdateFlyoutActionIcon`, where the result can be a secret boolean.
-`GamepadClassFlyout.lua` patches only the LeftClassAction instance's icon
-selection query. Accessible active flags keep the native spell selection;
+`GamepadClassFlyout.lua` patches only the LeftClassAction/RightClassAction
+instances' icon selection query. Accessible active flags keep the native spell selection;
 an inaccessible flag returns nil so Blizzard's unchanged icon renderer uses
 its generic flyout texture. It does not infer the protected form, replace the
 global spell API, or change cast/cancel handlers.
@@ -42,6 +42,15 @@ In game, reload outside combat, switch Druid forms, and repeat the triggering
 interaction in combat/in a group. A generic class-menu icon while the active
 state is restricted is intentional; keyboard action bars and the player
 energy/rage/mana display must remain unchanged.
+
+Installation is checked separately from the secret-state logic: the root
+can be available only through `UIParent.GamepadMainActionBarFrame` (XML
+parentKey), without global root/child aliases. The button registry is also
+checked and late class-button registrations are handled. A next-frame pass
+after login/world entry handles initialization ordering, without polling.
+Tests cover these paths, delayed setup and deduplication. `/suiflyout` prints
+the discovered class-button names and `guard: true/false` using only public
+frame/function references; it does not query auras or spell active state.
 
 ## In-game validation
 
