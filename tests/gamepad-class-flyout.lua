@@ -4,7 +4,15 @@ local function forbidden() error("must not cast, change action/grid state, or in
 local secret = setmetatable({}, {__index = forbidden, __tostring = forbidden, __eq = forbidden})
 function canaccessvalue(value) return not rawequal(value, secret) end
 local original = function() return "original" end
-local states, queries, onLoad, onLogin, target
+local states, queries, onLoad, onLogin, onEnteringWorld, target, registry, timers
+function hooksecurefunc(object, method, callback)
+	assert(object == registry and method == "RegisterFrame")
+	local originalMethod = object[method]
+	object[method] = function(self, ...)
+		originalMethod(self, ...)
+		callback(self, ...)
+	end
+end
 C_Flyout = {GetFlyoutTexture = function(id) assert(id == 262); return "generic-flyout" end}
 local function NativeIconUpdate(self)
 	if not self.isFlyoutAction then return end
@@ -22,18 +30,25 @@ if arg and arg[1] then
 	NativeIconUpdate = GamepadActionBarButtonFlyoutMixin.UpdateFlyoutActionIcon
 end
 local function setup(enabled, late, restricted)
-	states, queries, onLoad, onLogin = {}, {}, nil, nil
+	states, queries, onLoad, onLogin, onEnteringWorld, timers = {}, {}, nil, nil, nil, {}
+	SlashCmdList = {}
+	C_Timer = {After = function(delay, callback) assert(delay == 0); timers[#timers + 1] = callback end}
 	C_Spell = {
 		IsActiveSpell = function(id) queries[#queries + 1] = id; if states[id] == nil then return false end; return states[id] end,
 		GetSpellTexture = function(id) return "spell-"..id end,
 	}
-	ShestakUI = {{RegisterEvent = function(_, event, callback) assert(event == "PLAYER_LOGIN"); onLogin = callback end}, {actionbar = {enable = enabled}}, {}}
+	ShestakUI = {{RegisterEvent = function(_, event, callback)
+		if event == "PLAYER_LOGIN" then onLogin = callback
+		elseif event == "PLAYER_ENTERING_WORLD" then onEnteringWorld = callback
+		else error("unexpected event") end
+	end}, {actionbar = {enable = enabled}}, {}}
 	EventUtil = {ContinueOnAddOnLoaded = function(addon, callback)
 		assert(addon == "Blizzard_GamepadActionBars")
 		onLoad = callback
 		if not late then callback() end
 	end}
 	target = {isFlyoutAction = true, flyoutID = 262, GetActiveSpellID = original, UpdateCooldown = original, OnEvent = original, showgrid = 1, icon = {SetTexture = function(self, texture) self.texture = texture end}}
+	function target:GetName() return "GamepadMainActionBarFramePageUnitLeftClassAction" end
 	function target:GetSingleSpellID() return self.singleSpellID end
 	function target:EnumFlyoutSlotInfo(onlyKnown)
 		assert(onlyKnown == true)
@@ -43,8 +58,14 @@ local function setup(enabled, late, restricted)
 	if restricted then target.IsForbidden = function() return true end end
 	for _, key in ipairs({"Hide", "Show", "SetAlpha", "SetAttribute", "SetScript", "HandleFlyoutClickOverride"}) do target[key] = forbidden end
 	CastSpellByID = forbidden
-	GamepadMainActionBarFrame, GamepadMainActionBarFramePageUnitLeftClassAction = nil, nil
-	if not late then GamepadMainActionBarFrame = {PageUnit = {LeftClassAction = target}} end
+	GamepadMainActionBarFrame, GamepadMainActionBarFramePageUnitLeftClassAction, GamepadMainActionBarFramePageUnitRightClassAction = nil, nil, nil
+	-- Reproduce the XML parentKey layout with NO global root/child aliases.
+	UIParent = {}
+	if not late then UIParent.GamepadMainActionBarFrame = {PageUnit = {LeftClassAction = target}} end
+	registry = {frames = {}}
+	function registry:ForEachFrame(callback) for _, frame in ipairs(self.frames) do callback(frame) end end
+	function registry:RegisterFrame(frame) self.frames[#self.frames + 1] = frame end
+	ActionBarButtonEventsFrame = registry
 	assert(loadfile(module))()
 end
 setup(false)
@@ -79,6 +100,18 @@ target.singleSpellID, target.isFlyoutAction, queries = nil, false, {}
 assert(target:GetActiveSpellID() == nil and #queries == 0)
 onLogin()
 assert(target.GetActiveSpellID == patched and C_Spell.IsActiveSpell == spellAPI)
+-- Initialization after our login handler must not discard the guard.
+target.GetActiveSpellID = original
+for _, callback in ipairs(timers) do callback() end
+assert(target.GetActiveSpellID == patched)
+target.GetActiveSpellID = original
+onEnteringWorld()
+assert(target.GetActiveSpellID == patched)
+local oldPrint, output, reads = print, {}, #queries
+print = function(...) output[#output + 1] = {...} end
+SlashCmdList.SUIFLYOUT()
+print = oldPrint
+assert(#output == 1 and output[1][3] == true and #queries == reads, "installation check must not read secret state")
 -- The addon can be loaded after login; also support the explicit global name
 -- used in the reported stack without patching the mixin or other instances.
 setup(true, true)
@@ -91,4 +124,18 @@ states[5487] = secret
 NativeIconUpdate(target)
 assert(target.icon.texture == "generic-flyout")
 assert(({GetActiveSpellID = original}).GetActiveSpellID == original)
-print("Gamepad class flyout public/secret state and native icon fallback tests passed")
+-- Late registered class buttons are patched even without any root/global alias.
+setup(true, true)
+registry:RegisterFrame(target)
+assert(target.GetActiveSpellID ~= original)
+local other = {GetName = function() return "ActionButton1" end, GetActiveSpellID = original, EnumFlyoutSlotInfo = original}
+registry:RegisterFrame(other)
+assert(other.GetActiveSpellID == original)
+-- Registry and parent-key paths must identify one physical button only once.
+UIParent.GamepadMainActionBarFrame = {PageUnit = {LeftClassAction = target}}
+oldPrint, output = print, {}
+print = function(...) output[#output + 1] = {...} end
+SlashCmdList.SUIFLYOUT()
+print = oldPrint
+assert(#output == 1 and output[1][3] == true)
+print("Gamepad class flyout parent-key/late-installation and secret-state tests passed")
