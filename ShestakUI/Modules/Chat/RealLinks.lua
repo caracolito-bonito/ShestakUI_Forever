@@ -18,7 +18,7 @@ local function GetLinkColor(data)
 	elseif type == "quest" then
 		if arg2 then
 			local color = GetQuestDifficultyColor(arg2)
-			return format("|cff%2x%2x%2x", color.r * 255, color.g * 255, color.b * 255)
+			return format("|cff%02x%02x%02x", color.r * 255, color.g * 255, color.b * 255)
 		else
 			return "|cffffd100"
 		end
